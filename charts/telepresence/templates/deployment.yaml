@@ -6,7 +6,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: telepresence
+      name: telepresence
   template:
     metadata:
       labels:
