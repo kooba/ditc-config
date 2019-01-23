@@ -1,4 +1,19 @@
+PROJECT ?= ditc-224715
 CONTEXT ?= gke_ditc-224715_europe-west2-a_ditc-cluster
+
+
+cluster-create:
+	gcloud container clusters create ditc-cluster \
+	--project=$(PROJECT) \
+	--region=europe-west2-a \
+	--zone=europe-west2-a  \
+	--image-type=COS \
+	--machine-type=n1-standard-1 \
+	--num-nodes=1 \
+	--node-version=1.10.9-gke.5
+
+cluster-delete:
+	gcloud container clusters delete ditc-cluster --region=europe-west2-a
 
 helm:
 	kubectl --context=$(CONTEXT) create serviceaccount --namespace kube-system tiller
@@ -9,7 +24,7 @@ helm:
 	helm --kube-context=$(CONTEXT) init --service-account tiller --upgrade
 
 brigade-namespace:
-	kubectl --context=$(CONTEXT) apply -f k8s/brigade.yaml
+	kubectl --context=$(CONTEXT) apply -f namespaces/brigade.yaml
 
 deploy-brigade:
 	helm repo add brigade https://azure.github.io/brigade --kube-context=$(CONTEXT)
@@ -25,3 +40,7 @@ deploy-kashti:
 	--namespace brigade  \
 	--kube-context=$(CONTEXT) \
 	-f charts/kashti/secrets.stage.yaml
+
+build-images:
+	docker build -t jakubborys/ditc-base:latest -f docker/base.docker .;
+	docker build -t jakubborys/ditc-wheel-builder:latest -f docker/build.docker .;
