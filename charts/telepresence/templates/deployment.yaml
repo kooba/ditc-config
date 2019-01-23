@@ -4,6 +4,9 @@ metadata:
   name: telepresence
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: telepresence
   template:
     metadata:
       labels:
