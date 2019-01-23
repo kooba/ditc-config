@@ -1,6 +1,7 @@
 PROJECT ?= ditc-224715
-CONTEXT ?= gke_ditc-224715_europe-west2-a_ditc-cluster
-
+CONTEXT ?= docker-for-desktop
+COMMIT ?= $(shell git rev-parse HEAD)
+REF ?= $(shell git branch | grep \* | cut -d ' ' -f2)
 
 cluster-create:
 	gcloud container clusters create ditc-cluster \
@@ -35,12 +36,33 @@ deploy-brigade:
 	--set vacuum.age=72h \
 	--set vacuum.maxBuilds=10
 
-deploy-kashti:
-	helm secrets upgrade kashti charts/kashti --install \
-	--namespace brigade  \
-	--kube-context=$(CONTEXT) \
-	-f charts/kashti/secrets.stage.yaml
-
 build-images:
 	docker build -t jakubborys/ditc-base:latest -f docker/base.docker .;
 	docker build -t jakubborys/ditc-wheel-builder:latest -f docker/build.docker .;
+	docker build -t jakubborys/ditc-brigade-worker:latest -f docker/brigade.docker .;
+
+docker-push:
+	docker push jakubborys/ditc-brigade-worker:latest
+
+# Brigade
+
+install-brigade-deps:
+	npm install
+
+lint-brigade:
+	./node_modules/.bin/eslint brigade.js
+
+deploy-projects:
+	for project in $(shell ls projects) ; do \
+		helm secrets upgrade brigade-$$project charts/brigade-project \
+		--install \
+		--namespace brigade \
+		--kube-context $(CONTEXT) \
+		-f projects/$$project/values.yaml \
+		-f projects/$$project/secrets.dev.yaml; \
+	done
+
+create-environment:
+	cat environment.json | jq '.name = "$(ENV_NAME)" | .action = "create"' > payload.json
+	brig run -c $(COMMIT) -r $(REF) -f brigade.js -p payload.json kooba/ditc-config \
+	--kube-context $(CONTEXT) --namespace brigade
