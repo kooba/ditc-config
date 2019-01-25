@@ -98,16 +98,8 @@ const createEnvironmentConfigMap = async (name, projects) => {
     environmentName: name,
   };
   configMap.metadata = metadata;
-  const config = yaml.safeLoad(
-    fs.readFileSync('/vcs/brigade/environment.yaml', 'utf8'),
-  );
-  for (const key of Object.keys(config)) {
-    if (projects[key]) {
-      config[key] = { ...config[key], ...projects[key] };
-    }
-  }
   configMap.data = {
-    environment: yaml.dump(config),
+    environment: yaml.dump(projects),
   };
 
   try {
@@ -142,17 +134,16 @@ const ensurePodIsRunning = async (namespace, appLabel) => {
 
 const deployDependencies = async (namespace) => {
   console.log('deploying dependencies');
-  const mysql = new Job('mysql', 'us.gcr.io/scomreg/brigade-worker:latest');
+  const mysql = new Job('mysql', 'jakubborys/ditc-brigade-worker:latest');
   mysql.storage.enabled = false;
   mysql.imageForcePull = true;
   mysql.tasks = [
     `helm upgrade ${namespace}-mysql stable/mysql \
     --install --namespace=${namespace} \
     --set imageTag=5.6 \
-    --set mysqlRootPassword=password \
     --set fullnameOverride=mysql`,
   ];
-  const rabbitMQ = new Job('rabbitmq', 'us.gcr.io/scomreg/brigade-worker:latest');
+  const rabbitMQ = new Job('rabbitmq', 'jakubborys/ditc-brigade-worker:latest');
   rabbitMQ.storage.enabled = false;
   rabbitMQ.imageForcePull = true;
   rabbitMQ.tasks = [
@@ -162,16 +153,13 @@ const deployDependencies = async (namespace) => {
     --set image.tag=3.7-management-alpine \
     --set rbac.create=false \
     --set replicaCount=1 \
-    --set resources.requests.cpu=200m \
-    --set resources.requests.memory=100Mi \
     --set updateStrategy=RollingUpdate \
-    --set rabbitmqPassword=password \
     --set rabbitmqMemoryHighWatermarkType=relative \
     --set rabbitmqMemoryHighWatermark=0.5 \
     --set definitions.vhosts='\\{"name":"services"\\}' \
     --set definitions.permissions='\\{"user":"guest"\\,"vhost":"services"\\,"configure":".*"\\,"read":".*"\\,"write":".*"\\}'`,
   ];
-  const redis = new Job('redis', 'us.gcr.io/scomreg/brigade-worker:latest');
+  const redis = new Job('redis', 'jakubborys/ditc-brigade-worker:latest');
   redis.storage.enabled = false;
   redis.imageForcePull = true;
   redis.tasks = [
@@ -179,18 +167,16 @@ const deployDependencies = async (namespace) => {
     --install --namespace ${namespace} \
     --set fullnameOverride=redis \
     --set cluster.enabled=false \
-    --set usePassword=false \
-    --set master.resources.requests.cpu=50m \
-    --set master.resources.requests.memory=50Mi;`,
+    --set usePassword=false;`,
   ];
   const telepresence = new Job(
-    'telepresence', 'us.gcr.io/scomreg/brigade-worker:latest',
+    'telepresence', 'jakubborys/ditc-brigade-worker:latest',
   );
   telepresence.storage.enabled = false;
   telepresence.imageForcePull = true;
   telepresence.tasks = [
     'cd /src',
-    `helm upgrade ${namespace}-telepresence brigade/charts/telepresence \
+    `helm upgrade ${namespace}-telepresence charts/telepresence \
     --install --namespace ${namespace}`,
   ];
   await Group.runAll([mysql, rabbitMQ, redis, telepresence]);
@@ -271,11 +257,11 @@ const deployProjects = async (environmentName) => {
 
 const provisionEnvironment = async (environmentName, projects) => {
   await createNamespace(environmentName);
-  // await createEnvironmentConfigMap(environmentName, projects);
+  await createEnvironmentConfigMap(environmentName, projects);
   // await createCommonConfigMaps(environmentName);
   // await createCommonSecrets(environmentName);
-  // await deployDependencies(environmentName);
-  // await deployProjects(environmentName);
+  await deployDependencies(environmentName);
+  await deployProjects(environmentName);
 };
 
 const refreshDeployments = async (environmentName, projects) => {

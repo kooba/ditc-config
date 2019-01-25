@@ -2,5 +2,10 @@
   "action": null,
   "name": null,
   "projects": {
+    "products": {
+      "org": "kooba",
+      "repo": "ditc-products",
+      "tag": "dev"
+    }
   }
 }
