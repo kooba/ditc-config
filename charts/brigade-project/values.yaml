@@ -87,7 +87,7 @@ vcsSidecar: "deis/git-sidecar:latest"
 # image pull secrets that will be injected into the worker. With this, you can
 # use a vcsSidecar or worker image from an internal repository.
 # https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets: gcr-pull-secret
+imagePullSecrets:
 
 # OPTIONAL: buildStorageSize is the size of the shared storage space used by the jobs
 # buildStorageSize: "50Mi"

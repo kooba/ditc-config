@@ -3,6 +3,10 @@ CONTEXT ?= docker-for-desktop
 COMMIT ?= $(shell git rev-parse HEAD)
 REF ?= $(shell git branch | grep \* | cut -d ' ' -f2)
 
+# Set GitHub Auth Token and Webhook Shared Secret here
+GITHUB_TOKEN ?= ""
+GITHUB_SHARED_SECRET ?= ""
+
 cluster-create:
 	gcloud container clusters create ditc-cluster \
 	--project=$(PROJECT) \
@@ -54,12 +58,13 @@ lint-brigade:
 
 deploy-projects:
 	for project in $(shell ls projects) ; do \
-		helm secrets upgrade brigade-$$project charts/brigade-project \
+		helm upgrade brigade-$$project charts/brigade-project \
 		--install \
 		--namespace brigade \
 		--kube-context $(CONTEXT) \
-		-f projects/$$project/values.yaml \
-		-f projects/$$project/secrets.dev.yaml; \
+		--set sharedSecret=$(GITHUB_SHARED_SECRET) \
+		--set github.token=$(GITHUB_TOKEN) \
+		-f projects/$$project/values.yaml; \
 	done
 
 create-environment:
