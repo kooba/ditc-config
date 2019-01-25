@@ -142,7 +142,8 @@ const deployDependencies = async (namespace) => {
     `helm upgrade ${namespace}-postgresql stable/postgresql \
     --install --namespace=${namespace} \
     --set fullnameOverride=postgresql \
-    --set persistence.enabled=false;`,
+    --set persistence.enabled=false \
+    --set postgresqlDatabase=postgresql;`,
   ];
 
   const rabbitMQ = new Job('rabbitmq', 'jakubborys/ditc-brigade-worker:latest');
