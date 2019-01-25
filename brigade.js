@@ -166,8 +166,7 @@ const deployDependencies = async (namespace) => {
     `helm upgrade ${namespace}-redis stable/redis \
     --install --namespace ${namespace} \
     --set fullnameOverride=redis \
-    --set cluster.enabled=false \
-    --set usePassword=false;`,
+    --set cluster.enabled=false`,
   ];
   const telepresence = new Job(
     'telepresence', 'jakubborys/ditc-brigade-worker:latest',
