@@ -134,15 +134,17 @@ const ensurePodIsRunning = async (namespace, appLabel) => {
 
 const deployDependencies = async (namespace) => {
   console.log('deploying dependencies');
-  const mysql = new Job('mysql', 'jakubborys/ditc-brigade-worker:latest');
-  mysql.storage.enabled = false;
-  mysql.imageForcePull = true;
-  mysql.tasks = [
-    `helm upgrade ${namespace}-mysql stable/mysql \
+  const postgresql = new Job('postgresql', 'jakubborys/ditc-brigade-worker:latest');
+  postgresql.storage.enabled = false;
+  postgresql.imageForcePull = true;
+  postgresql.tasks = [
+    'cd /src',
+    `helm upgrade ${namespace}-postgresql stable/postgresql \
     --install --namespace=${namespace} \
-    --set imageTag=5.6 \
-    --set fullnameOverride=mysql`,
+    --set fullnameOverride=postgresql \
+    --set persistence.enabled=false;`,
   ];
+
   const rabbitMQ = new Job('rabbitmq', 'jakubborys/ditc-brigade-worker:latest');
   rabbitMQ.storage.enabled = false;
   rabbitMQ.imageForcePull = true;
@@ -178,8 +180,8 @@ const deployDependencies = async (namespace) => {
     `helm upgrade ${namespace}-telepresence charts/telepresence \
     --install --namespace ${namespace}`,
   ];
-  await Group.runAll([mysql, rabbitMQ, redis, telepresence]);
-  await ensurePodIsRunning(namespace, 'mysql');
+  await Group.runAll([postgresql, rabbitMQ, redis, telepresence]);
+  await ensurePodIsRunning(namespace, 'postgresql');
   await ensurePodIsRunning(namespace, 'rabbitmq-ha');
   await ensurePodIsRunning(namespace, 'redis');
   console.log('done deploying dependencies');
