@@ -45,48 +45,6 @@ const createNamespace = async (namespaceName) => {
   console.log('Done creating new namespace');
 };
 
-const createCommonConfigMaps = async (namespaceName) => {
-  console.log('creating common configMaps');
-  const configMaps = yaml.safeLoadAll(
-    fs.readFileSync('/vcs/brigade/common/configMaps.yaml', 'utf8'),
-  );
-  for (const configMap of configMaps) {
-    configMap.metadata.namespace = namespaceName;
-    try {
-      await k8sClient.createNamespacedConfigMap(namespaceName, configMap);
-    } catch (error) {
-      if (error.body && error.body.code === 409) {
-        await k8sClient.replaceNamespacedConfigMap(
-          configMap.metadata.name, namespaceName, configMap,
-        );
-      } else {
-        throw error;
-      }
-    }
-  }
-};
-
-const createCommonSecrets = async (namespaceName) => {
-  console.log('creating common secrets');
-  const secrets = yaml.safeLoadAll(
-    fs.readFileSync('/vcs/brigade/common/secrets.yaml', 'utf8'),
-  );
-  for (const secret of secrets) {
-    secret.metadata.namespace = namespaceName;
-    try {
-      await k8sClient.createNamespacedSecret(namespaceName, secret);
-    } catch (error) {
-      if (error.body && error.body.code === 409) {
-        await k8sClient.replaceNamespacedSecret(
-          secret.metadata.name, namespaceName, secret,
-        );
-      } else {
-        throw error;
-      }
-    }
-  }
-};
-
 const createEnvironmentConfigMap = async (name, projects) => {
   console.log('creating environment configMap');
   const configMap = new kubernetes.V1ConfigMap();
@@ -185,8 +143,6 @@ const deployDependencies = async (namespace) => {
   console.log('done deploying dependencies');
 };
 
-const toBase64 = string => Buffer.from(string).toString('base64');
-
 const deployProjects = async (environmentName) => {
   const environmentConfigMap = await k8sClient.readNamespacedConfigMap(
     `environment-config-${environmentName}`, BRIGADE_NAMESPACE,
@@ -237,17 +193,17 @@ const deployProjects = async (environmentName) => {
         project: projectId,
       };
       deployEventSecret.type = 'brigade.sh/build';
-      deployEventSecret.data = {
-        build_id: toBase64(buildName),
-        build_name: toBase64(buildName),
-        commit_id: toBase64(gitSha),
-        commit_ref: toBase64(projectConfig.tag),
-        event_provider: toBase64('brigade-cli'),
-        event_type: toBase64('exec'),
-        log_level: toBase64('log'),
-        payload: toBase64(`{"name": "${environmentName}"}`),
-        project_id: toBase64(projectId),
-        script: toBase64(''),
+      deployEventSecret.stringData = {
+        build_id: buildName,
+        build_name: buildName,
+        commit_id: gitSha,
+        commit_ref: projectConfig.tag,
+        event_provider: 'brigade-cli',
+        event_type: 'exec',
+        log_level: 'log',
+        payload: `{"name": "${environmentName}"}`,
+        project_id: projectId,
+        script: '',
       };
       await k8sClient.createNamespacedSecret(BRIGADE_NAMESPACE, deployEventSecret);
     }
@@ -257,8 +213,6 @@ const deployProjects = async (environmentName) => {
 const provisionEnvironment = async (environmentName, projects) => {
   await createNamespace(environmentName);
   await createEnvironmentConfigMap(environmentName, projects);
-  // await createCommonConfigMaps(environmentName);
-  // await createCommonSecrets(environmentName);
   await deployDependencies(environmentName);
   await deployProjects(environmentName);
 };
