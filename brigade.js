@@ -1,7 +1,6 @@
 const { events, Job, Group } = require('brigadier');
 const kubernetes = require('@kubernetes/client-node');
 const yaml = require('js-yaml');
-const fs = require('fs');
 const fetch = require('node-fetch');
 const ulid = require('ulid');
 const crypto = require('crypto');
