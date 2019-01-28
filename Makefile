@@ -52,6 +52,11 @@ docker-push:
 
 build: build-images docker-push
 
+build-projects:
+	make -C ../ditc-products build
+	make -C ../ditc-orders build
+	make -C ../ditc-gateway build
+
 # Brigade
 
 install-brigade-deps:
@@ -73,5 +78,15 @@ deploy-projects:
 
 create-environment:
 	cat environment.json | jq '.name = "$(ENV_NAME)" | .action = "create"' > payload.json
+	brig run -c $(COMMIT) -r $(REF) -f brigade.js -p payload.json kooba/ditc-config \
+	--kube-context $(CONTEXT) --namespace brigade
+
+refresh-environment:
+	cat environment.json | jq '.name = "$(ENV_NAME)" | .action = "refresh"' > payload.json
+	brig run -c $(COMMIT) -r $(REF) -f brigade.js -p payload.json kooba/ditc-config \
+	--kube-context $(CONTEXT) --namespace brigade
+
+delete-environment:
+	cat environment.json | jq '.name = "$(ENV_NAME)" | .action = "delete"' > payload.json
 	brig run -c $(COMMIT) -r $(REF) -f brigade.js -p payload.json kooba/ditc-config \
 	--kube-context $(CONTEXT) --namespace brigade

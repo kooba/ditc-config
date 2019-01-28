@@ -98,8 +98,8 @@ const deployDependencies = async (namespace) => {
     `helm upgrade ${namespace}-postgresql stable/postgresql \
     --install --namespace=${namespace} \
     --set fullnameOverride=postgresql \
-    --set persistence.enabled=false \
-    --set postgresqlDatabase=postgresql;`,
+    --set postgresqlDatabase=postgresql \
+    --set readinessProbe.initialDelaySeconds=60;`,
   ];
 
   const rabbitMQ = new Job('rabbitmq', 'jakubborys/ditc-brigade-worker:latest');
@@ -112,6 +112,7 @@ const deployDependencies = async (namespace) => {
     --set image.tag=3.7-management-alpine \
     --set rbac.create=false \
     --set replicaCount=1 \
+    --set persistentVolume.enabled=true \
     --set updateStrategy=RollingUpdate \
     --set rabbitmqMemoryHighWatermarkType=relative \
     --set rabbitmqMemoryHighWatermark=0.5`,
@@ -222,7 +223,7 @@ const refreshDeployments = async (environmentName, projects) => {
 };
 
 const destroyEnvironment = async (environmentName) => {
-  const helmDelete = new Job('helm-delete', 'us.gcr.io/scomreg/brigade-worker:latest');
+  const helmDelete = new Job('helm-delete', 'jakubborys/ditc-brigade-worker:latest');
   helmDelete.storage.enabled = false;
   helmDelete.imageForcePull = true;
   helmDelete.tasks = [
