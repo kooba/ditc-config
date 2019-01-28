@@ -138,7 +138,6 @@ const deployDependencies = async (namespace) => {
   postgresql.storage.enabled = false;
   postgresql.imageForcePull = true;
   postgresql.tasks = [
-    'cd /src',
     `helm upgrade ${namespace}-postgresql stable/postgresql \
     --install --namespace=${namespace} \
     --set fullnameOverride=postgresql \
@@ -158,9 +157,7 @@ const deployDependencies = async (namespace) => {
     --set replicaCount=1 \
     --set updateStrategy=RollingUpdate \
     --set rabbitmqMemoryHighWatermarkType=relative \
-    --set rabbitmqMemoryHighWatermark=0.5 \
-    --set definitions.vhosts='\\{"name":"services"\\}' \
-    --set definitions.permissions='\\{"user":"guest"\\,"vhost":"services"\\,"configure":".*"\\,"read":".*"\\,"write":".*"\\}'`,
+    --set rabbitmqMemoryHighWatermark=0.5`,
   ];
   const redis = new Job('redis', 'jakubborys/ditc-brigade-worker:latest');
   redis.storage.enabled = false;

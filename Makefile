@@ -46,7 +46,11 @@ build-images:
 	docker build -t jakubborys/ditc-brigade-worker:latest -f docker/brigade.docker .;
 
 docker-push:
+	docker push jakubborys/ditc-base:latest
+	docker push jakubborys/ditc-wheel-builder:latest
 	docker push jakubborys/ditc-brigade-worker:latest
+
+build: build-images docker-push
 
 # Brigade
 
