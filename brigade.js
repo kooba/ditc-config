@@ -99,6 +99,7 @@ const deployDependencies = async (namespace) => {
     --install --namespace=${namespace} \
     --set fullnameOverride=postgresql \
     --set postgresqlDatabase=postgresql \
+    --set postgresqlPassword=password \
     --set readinessProbe.initialDelaySeconds=60;`,
   ];
 
@@ -114,6 +115,7 @@ const deployDependencies = async (namespace) => {
     --set replicaCount=1 \
     --set persistentVolume.enabled=true \
     --set updateStrategy=RollingUpdate \
+    --set rabbitmqPassword=password \
     --set rabbitmqMemoryHighWatermarkType=relative \
     --set rabbitmqMemoryHighWatermark=0.5`,
   ];
@@ -124,6 +126,7 @@ const deployDependencies = async (namespace) => {
     `helm upgrade ${namespace}-redis stable/redis \
     --install --namespace ${namespace} \
     --set fullnameOverride=redis \
+    --set password=password \
     --set cluster.enabled=false`,
   ];
   const telepresence = new Job(
@@ -137,6 +140,7 @@ const deployDependencies = async (namespace) => {
     --install --namespace ${namespace}`,
   ];
   await Group.runAll([postgresql, rabbitMQ, redis, telepresence]);
+  await new Promise(resolve => setTimeout(resolve, 10000));
   await ensurePodIsRunning(namespace, 'postgresql');
   await ensurePodIsRunning(namespace, 'rabbitmq-ha');
   await ensurePodIsRunning(namespace, 'redis');
