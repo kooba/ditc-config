@@ -95,12 +95,13 @@ const deployDependencies = async (namespace) => {
   postgresql.storage.enabled = false;
   postgresql.imageForcePull = true;
   postgresql.tasks = [
-    `helm upgrade ${namespace}-postgresql stable/postgresql \
+    'cd /src',
+    `helm upgrade ${namespace}-postgresql charts/postgresql \
     --install --namespace=${namespace} \
     --set fullnameOverride=postgresql \
-    --set postgresqlDatabase=postgresql \
     --set postgresqlPassword=password \
-    --set readinessProbe.initialDelaySeconds=60;`,
+    --set readinessProbe.initialDelaySeconds=60 \
+    --set livenessProbe.initialDelaySeconds=60;`,
   ];
 
   const rabbitMQ = new Job('rabbitmq', 'jakubborys/ditc-brigade-worker:latest');
