@@ -1,5 +1,5 @@
 PROJECT ?= ditc-224715
-CONTEXT ?= docker-for-desktop
+CONTEXT ?= gke_ditc-224715_europe-west2-a_ditc-cluster # docker-for-desktop
 COMMIT ?= $(shell git rev-parse HEAD)
 REF ?= $(shell git branch | grep \* | cut -d ' ' -f2)
 
@@ -7,26 +7,20 @@ REF ?= $(shell git branch | grep \* | cut -d ' ' -f2)
 GITHUB_TOKEN ?= ""
 GITHUB_SHARED_SECRET ?= ""
 
-cluster-create:
+create-cluster:
 	gcloud container clusters create ditc-cluster \
 	--project=$(PROJECT) \
 	--region=europe-west2-a \
-	--zone=europe-west2-a  \
 	--image-type=COS \
-	--machine-type=n1-standard-1 \
+	--machine-type=n1-standard-2 \
 	--num-nodes=1 \
 	--node-version=1.10.9-gke.5
 
-cluster-delete:
-	gcloud container clusters delete ditc-cluster --region=europe-west2-a
-
-helm:
+configure-helm:
 	kubectl --context=$(CONTEXT) create serviceaccount --namespace kube-system tiller
 	kubectl --context=$(CONTEXT) create clusterrolebinding tiller-cluster-rule \
-		--clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-	kubectl --context=$(CONTEXT) patch deploy --namespace kube-system tiller-deploy \
-		-p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
-	helm --kube-context=$(CONTEXT) init --service-account tiller --upgrade
+	--clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+	helm --kube-context=$(CONTEXT) init --service-account tiller
 
 brigade-namespace:
 	kubectl --context=$(CONTEXT) apply -f namespaces/brigade.yaml
@@ -39,6 +33,11 @@ deploy-brigade:
 	--kube-context=$(CONTEXT) \
 	--set vacuum.age=72h \
 	--set vacuum.maxBuilds=10
+	kubectl --context=$(CONTEXT) create clusterrolebinding brigade-worker-cluster-rule \
+	--clusterrole=cluster-admin --serviceaccount=brigade:brigade-worker
+
+deploy-ingress:
+	helm --kube-context=$(CONTEXT) install --name nginx-ingress stable/nginx-ingress
 
 build-images:
 	docker build -t jakubborys/ditc-base:latest -f docker/base.docker .;

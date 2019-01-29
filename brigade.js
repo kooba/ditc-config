@@ -100,6 +100,8 @@ const deployDependencies = async (namespace) => {
     --install --namespace=${namespace} \
     --set fullnameOverride=postgresql \
     --set postgresqlPassword=password \
+    --set resources.requests.cpu=50m \
+    --set resources.requests.memory=156Mi \
     --set readinessProbe.initialDelaySeconds=60 \
     --set livenessProbe.initialDelaySeconds=60;`,
   ];
@@ -112,7 +114,6 @@ const deployDependencies = async (namespace) => {
     --install --namespace=${namespace} \
     --set fullnameOverride=rabbitmq \
     --set image.tag=3.7-management-alpine \
-    --set rbac.create=false \
     --set replicaCount=1 \
     --set persistentVolume.enabled=true \
     --set updateStrategy=RollingUpdate \
