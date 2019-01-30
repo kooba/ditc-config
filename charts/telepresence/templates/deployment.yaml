@@ -14,4 +14,4 @@ spec:
     spec:
       containers:
       - name: myservice
-        image: datawire/telepresence-k8s:0.96
+        image: datawire/telepresence-k8s:0.97

@@ -36,9 +36,6 @@ deploy-brigade:
 	kubectl --context=$(CONTEXT) create clusterrolebinding brigade-worker-cluster-rule \
 	--clusterrole=cluster-admin --serviceaccount=brigade:brigade-worker
 
-deploy-ingress:
-	helm --kube-context=$(CONTEXT) install --name nginx-ingress stable/nginx-ingress
-
 build-images:
 	docker build -t jakubborys/ditc-base:latest -f docker/base.docker .;
 	docker build -t jakubborys/ditc-wheel-builder:latest -f docker/build.docker .;
@@ -89,3 +86,7 @@ delete-environment:
 	cat environment.json | jq '.name = "$(ENV_NAME)" | .action = "delete"' > payload.json
 	brig run -c $(COMMIT) -r $(REF) -f brigade.js -p payload.json kooba/ditc-config \
 	--kube-context $(CONTEXT) --namespace brigade
+
+tp-start:
+	telepresence --context $(CONTEXT) --deployment telepresence \
+	--namespace jakub --method vpn-tcp
