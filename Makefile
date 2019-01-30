@@ -2,6 +2,7 @@ PROJECT ?= ditc-224715
 CONTEXT ?= gke_ditc-224715_europe-west2-a_ditc-cluster # docker-for-desktop
 COMMIT ?= $(shell git rev-parse HEAD)
 REF ?= $(shell git branch | grep \* | cut -d ' ' -f2)
+ENV_NAME ?= jakub
 
 # Set GitHub Auth Token and Webhook Shared Secret here
 GITHUB_TOKEN ?= ""
@@ -90,3 +91,22 @@ delete-environment:
 tp-start:
 	telepresence --context $(CONTEXT) --deployment telepresence \
 	--namespace jakub --method vpn-tcp
+
+create-products:
+	curl 'http://gateway/products' -XPOST -d '{"id": "the_odyssey", "title": "The Odyssey", "passenger_capacity": 101, "maximum_speed": 5, "in_stock": 10}'
+
+get-products:
+	curl 'http://gateway/products/the_odyssey'
+
+ksync-init:
+	ksync init --context $(CONTEXT)
+
+ksync-setup:
+	ksync --context $(CONTEXT) --namespace $(ENV_NAME) create --selector=app=gateway \
+	$$(dirname $$(pwd))/ditc-gateway/gateway /appenv/lib/python3.6/site-packages/gateway
+
+ksync-watch:
+	ksync watch --context $(CONTEXT)
+
+ksync-get:
+	ksync --context $(CONTEXT) get
