@@ -62,6 +62,15 @@ install-brigade-deps:
 lint-brigade:
 	./node_modules/.bin/eslint brigade.js
 
+clean-brigade:
+	kubectl --context=$(CONTEXT) delete pods -n brigade -l role=vacuum
+	kubectl --context=$(CONTEXT) delete pods -n brigade -l component=build
+	kubectl --context=$(CONTEXT) delete pods -n brigade -l component=job
+	kubectl --context=$(CONTEXT) -n brigade delete secrets \
+	$$(kubectl --context=$(CONTEXT) -n brigade get secrets --field-selector=type=brigade.sh/job -o=jsonpath="{.items[*].metadata.name}")
+	kubectl --context=$(CONTEXT) -n brigade delete secrets \
+	$$(kubectl --context=$(CONTEXT) -n brigade get secrets --field-selector=type=brigade.sh/build -o=jsonpath="{.items[*].metadata.name}")
+
 deploy-projects:
 	for project in $(shell ls projects) ; do \
 		helm upgrade brigade-$$project charts/brigade-project \
