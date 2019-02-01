@@ -1,0 +1,22 @@
+FROM deis/brigade-worker:latest
+
+RUN yarn add node-fetch
+
+RUN apk update && \
+    apk upgrade && \
+    apk add curl && \
+    rm -rf /var/cache/apk/*
+
+# Install Helm
+
+ENV HELM_VERSION=v2.7.2
+ENV FILENAME helm-${HELM_VERSION}-linux-amd64.tar.gz
+ENV HELM_URL https://storage.googleapis.com/kubernetes-helm/${FILENAME}
+
+RUN curl -o /tmp/${FILENAME} ${HELM_URL} \
+  && tar -zxvf /tmp/${FILENAME} -C /tmp \
+  && chmod +x /tmp/linux-amd64/helm \
+  && mv /tmp/linux-amd64/helm /usr/local/bin/helm \
+  && rm -rf /tmp/linux-amd64
+
+RUN helm init --client-only

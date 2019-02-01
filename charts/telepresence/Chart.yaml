@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Create a Telepresence project
+name: telepresence
+version: 0.1.0

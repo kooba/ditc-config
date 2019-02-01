@@ -1,0 +1,21 @@
+{
+  "action": null,
+  "name": null,
+  "projects": {
+    "products": {
+      "org": "kooba",
+      "repo": "ditc-products",
+      "tag": "dev"
+    },
+    "orders": {
+      "org": "kooba",
+      "repo": "ditc-orders",
+      "tag": "dev"
+    },
+    "gateway": {
+      "org": "kooba",
+      "repo": "ditc-gateway",
+      "tag": "dev"
+    }
+  }
+}

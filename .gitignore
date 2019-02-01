@@ -1,0 +1,8 @@
+*rsa*
+*.pyc
+*.DS_Store
+*.egg*
+node_modules
+*.yaml.dec
+payload.json
+telepresence.log
