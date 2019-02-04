@@ -1,13 +1,11 @@
-# ditc-config
-Config - Development In The Cloud Talk
+# Config
+Config repository for [Development In The Cloud](https://medium.com/@JakubBorys/development-in-the-cloud-4aa2cabd3880) article
 
+This is a part of 4 repo setup:
 
-## Brigade CLI
+Config (This one): https://github.com/kooba/ditc-gateway  
+Gateway: https://github.com/kooba/ditc-gateway  
+Orders: https://github.com/kooba/ditc-orders  
+Products: https://github.com/kooba/ditc-products  
 
-To install on darwin:
-
-```sh
-$ curl -L https://github.com/Azure/brigade/releases/download/v0.19.0/brig-darwin-amd64 > brig
-$ chmod +x brig
-$ mv brig /usr/local/bin/brig
-```
+Please refer to [Makefile](https://github.com/kooba/ditc-config/blob/master/Makefile) in this repository and [main article](https://medium.com/@JakubBorys/development-in-the-cloud-4aa2cabd3880) for setup and run instructions.
