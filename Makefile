@@ -97,6 +97,8 @@ delete-environment:
 	brig run -c $(COMMIT) -r $(REF) -f brigade.js -p payload.json kooba/ditc-config \
 	--kube-context $(CONTEXT) --namespace brigade
 
+clean: delete-environment clean-brigade
+
 tp-start:
 	telepresence --context $(CONTEXT) --deployment telepresence \
 	--namespace jakub --method vpn-tcp
