@@ -1,5 +1,5 @@
 PROJECT ?= ditc-224715
-CONTEXT ?= gke_ditc-224715_europe-west2-a_ditc-cluster # docker-for-desktop
+CONTEXT ?= docker-for-desktop
 COMMIT ?= $(shell git rev-parse HEAD)
 REF ?= $(shell git branch | grep \* | cut -d ' ' -f2)
 ENV_NAME ?= jakub
